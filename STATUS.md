@@ -21,6 +21,8 @@ _Last updated: 2026-11-14_
 - Live at the owner's Vercel deployment (deployed by the owner from this branch).
 - "Download editable copy": the PNG carries the portfolio in an iTXt chunk; uploading it restores the holdings for editing.
 - One "Upload" path for Excel (.xlsx), CSV/TSV, saved .json and editable PNGs. Header detection (English + Hebrew broker headings), total rows skipped, cost/price columns never used as value.
+- SEC type-ahead implemented (browser-side search over a static list); waiting for the data file.
+- A row without a value is shown as unfinished (grey), not as an error.
 - OpenFIGI verified live: works, but results are too noisy for type-ahead (e.g. municipal bonds for "apple"). Kept as an option, not enabled.
 
 ## Not done / limitations
@@ -42,4 +44,4 @@ _Last updated: 2026-11-14_
 
 ## Exact next step
 
-Type-ahead from the SEC public ticker list (static file, no API at runtime). Blocked on: SEC requires a contact e-mail in the download request's User-Agent — waiting for the owner to choose which address to use. Then: the "story" infographic (multi-slide export) and snapshots over time.
+Owner runs `scripts/build-securities.mjs` once with their SEC_USER_AGENT (the type-ahead code is done and tested; only the data file is missing), then commit `public/data/us-securities.json`. Then: the "story" infographic (multi-slide export) and snapshots over time.

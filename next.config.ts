@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { existsSync } from "node:fs";
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -10,6 +11,10 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  env: {
+    // Enables browser-side type-ahead when the SEC ticker list has been generated.
+    SEC_INDEX_AVAILABLE: existsSync("public/data/us-securities.json") ? "1" : "",
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

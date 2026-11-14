@@ -82,7 +82,9 @@ export default function Home() {
             <div>
               <h3>What leaves your device</h3>
               <p>
-                {provider.enabled
+                {provider.id === "sec"
+                  ? "Ticker suggestions come from a public list loaded into your browser, so what you type isn't sent anywhere."
+                  : provider.enabled
                   ? "When you search for a security, only the text you type in the identifier box is sent to look it up. Values and the rest of your portfolio are never sent."
                   : "Security search is turned off, so nothing about your holdings leaves your device."}{" "}
                 Images and portfolio files are created on your device. There are no analytics that capture holdings or values.

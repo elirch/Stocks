@@ -46,7 +46,7 @@ Copy `.env.example` to `.env.local` if you want to change anything. Nothing is r
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `MARKET_DATA_PROVIDER` | `fixture` in dev, `none` in production | `none` = manual entry only. `fixture` = small built-in **demo** list, labelled as such in the UI. `openfigi` = OpenFIGI search (see below). |
+| `MARKET_DATA_PROVIDER` | `sec` if the SEC list exists, else `fixture` in dev / `none` in production | `none` = manual entry only. `fixture` = small built-in **demo** list, labelled as such in the UI. `openfigi` = OpenFIGI search (see below). |
 | `OPENFIGI_API_KEY` | empty | Optional, server-side only. |
 
 Secrets are only read on the server (`src/lib/market-data/server.ts`); nothing provider-related is shipped to the browser.
@@ -83,6 +83,19 @@ tests/e2e/             Playwright
 - Motion runs only on user-initiated changes and respects `prefers-reduced-motion`.
 
 ## Market data
+
+### Ticker type-ahead (SEC list)
+
+Suggestions come from `public/data/us-securities.json`, generated from the SEC's public ticker list and searched **inside the browser** (nothing typed is sent anywhere). U.S.-listed companies only; no sectors. Refresh it monthly:
+
+```bash
+SEC_USER_AGENT="PortfolioAtlas you@example.com" node scripts/build-securities.mjs
+git add public/data/us-securities.json && git commit -m "Refresh SEC ticker list"
+```
+
+The SEC requires a contact address in the User-Agent; it is read from the environment and never stored in the repo. When the file exists, type-ahead turns on automatically at build time (unless `MARKET_DATA_PROVIDER` says otherwise).
+
+### Other providers
 
 The app works fully without any data provider. Search is behind `MarketDataProvider` (`src/lib/market-data/types.ts`) and only receives the typed search text.
 

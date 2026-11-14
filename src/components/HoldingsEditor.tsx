@@ -158,9 +158,11 @@ function HoldingRow({
   const errorId = `err-${h.id}`;
   const update = (patch: Partial<HoldingDraft>) => dispatch({ type: "update", id: h.id, patch });
   const sectorAllowed = canHaveSector(h.type);
+  // A missing value is just unfinished, not an error — only real mistakes turn the row red.
+  const bad = status.kind === "invalid" && status.issue !== "empty";
 
   return (
-    <li className={`row${status.kind === "invalid" ? " invalid" : ""}${duplicate ? " dupe" : ""}`}>
+    <li className={`row${bad ? " invalid" : ""}${duplicate ? " dupe" : ""}`}>
       <span className="row-num" aria-hidden="true">
         {index + 1}
       </span>
@@ -200,7 +202,7 @@ function HoldingRow({
             inputMode="decimal"
             placeholder="Value"
             aria-label={`Current value for ${label}`}
-            aria-invalid={status.kind === "invalid"}
+            aria-invalid={bad}
             aria-describedby={status.kind === "invalid" ? errorId : undefined}
             maxLength={40}
             onChange={(e) => update({ valueText: e.target.value })}
@@ -248,11 +250,16 @@ function HoldingRow({
       </div>
       {(status.kind === "invalid" || h.exchange || h.source !== "manual") && (
         <div className="row-foot">
-          {status.kind === "invalid" && (
-            <span id={errorId} className="row-error">
-              {status.message} Not included in totals.
-            </span>
-          )}
+          {status.kind === "invalid" &&
+            (bad ? (
+              <span id={errorId} className="row-error">
+                {status.message} Not included in totals.
+              </span>
+            ) : (
+              <span id={errorId} className="row-pending">
+                Add its current value.
+              </span>
+            ))}
           {h.exchange && <span className="tag">Exchange: {h.exchange}</span>}
           {h.source === "fixture" && <span className="tag demo">Details from demo data</span>}
           {h.source === "provider" && <span className="tag">Details from {provider.label}</span>}

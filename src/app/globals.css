@@ -320,3 +320,4 @@ textarea.input { min-height: 120px; font-family: ui-monospace, SFMono-Regular, M
   .atlas-svg rect { forced-color-adjust: none; }
 }
 .editable-box { display: grid; gap: 4px; padding-top: 12px; border-top: 1px dashed var(--line-2); }
+.row-pending { color: var(--ink-3); font-size: 13px; }

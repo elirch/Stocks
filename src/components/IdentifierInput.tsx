@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import type { ProviderInfo, SecurityMatch } from "@/lib/market-data/types";
+import { loadIndex, searchIndex } from "@/lib/market-data/localIndex";
 import { INSTRUMENT_LABELS } from "@/lib/portfolio/taxonomy";
 
 interface Props {
@@ -39,19 +40,26 @@ export function IdentifierInput({ value, onChange, onPick, provider, rowLabel }:
       abort.current = ctrl;
       setStatus("loading");
       try {
-        const res = await fetch(`/api/securities/search?q=${encodeURIComponent(q)}`, { signal: ctrl.signal });
-        if (!res.ok) throw new Error("search failed");
-        const body = (await res.json()) as { results: SecurityMatch[] };
-        setResults(body.results ?? []);
+        let found: SecurityMatch[];
+        if (provider.id === "sec") {
+          // Searched locally: the typed text never leaves the browser.
+          found = searchIndex(await loadIndex(), q);
+          if (ctrl.signal.aborted) return;
+        } else {
+          const res = await fetch(`/api/securities/search?q=${encodeURIComponent(q)}`, { signal: ctrl.signal });
+          if (!res.ok) throw new Error("search failed");
+          found = ((await res.json()) as { results: SecurityMatch[] }).results ?? [];
+        }
+        setResults(found);
         setOpen(focusedRef.current);
         setActive(-1);
         setStatus("idle");
       } catch (e) {
         if ((e as Error).name !== "AbortError") setStatus("error");
       }
-    }, 250);
+    }, provider.id === "sec" ? 60 : 250);
     return () => window.clearTimeout(t);
-  }, [value, provider.enabled, typed]);
+  }, [value, provider.enabled, provider.id, typed]);
 
   function choose(m: SecurityMatch) {
     onPick(m);
@@ -82,6 +90,7 @@ export function IdentifierInput({ value, onChange, onPick, provider, rowLabel }:
         }}
         onFocus={() => {
           focusedRef.current = true;
+          if (provider.id === "sec") void loadIndex().catch(() => undefined); // warm up while the user starts typing
         }}
         onBlur={() => {
           focusedRef.current = false;

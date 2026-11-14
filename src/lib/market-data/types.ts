@@ -18,7 +18,7 @@ export interface SecurityMatch {
 }
 
 export interface ProviderInfo {
-  id: "none" | "fixture" | "openfigi";
+  id: "none" | "fixture" | "openfigi" | "sec";
   enabled: boolean;
   /** Short label shown next to search results. */
   label: string;

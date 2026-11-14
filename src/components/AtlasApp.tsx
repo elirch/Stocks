@@ -33,6 +33,7 @@ export function AtlasApp({ provider }: { provider: ProviderInfo }) {
   const insights = useMemo(() => computeInsights(summary), [summary]);
   const selected = summary.drawable.find((p) => p.id === selectedId) ?? null;
   const hasData = summary.drawable.length > 0;
+  const badRows = summary.excluded.filter((x) => x.issue !== "empty").length;
   const exportBase = useMemo(() => ({ currency: draft.currency, groups, mode, insights }), [draft.currency, groups, mode, insights]);
 
   const onZoom = useCallback((k: GroupKey | null) => setZoomKey(k), []);
@@ -189,10 +190,10 @@ export function AtlasApp({ provider }: { provider: ProviderInfo }) {
               provider={provider}
               onUpload={() => fileInput.current?.click()}
             />
-            {summary.excluded.length > 0 && (
+            {badRows > 0 && (
               <p className="notice warn" role="status">
-                {summary.excluded.length} {summary.excluded.length === 1 ? "row has" : "rows have"} an invalid value and{" "}
-                {summary.excluded.length === 1 ? "is" : "are"} not included in the map or totals.
+                {badRows} {badRows === 1 ? "row has" : "rows have"} an invalid value and {badRows === 1 ? "is" : "are"} not
+                included in the map or totals.
               </p>
             )}
             <section className="data-box" aria-labelledby="data-title">
