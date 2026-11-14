@@ -25,8 +25,8 @@ _Last updated: 2026-11-14_
 
 ## Not done / limitations
 
-- **Not deployed** — nothing is live yet.
-- OpenFIGI integration not verified against the live API; its terms must be re-read before public use. No provider supplies business sectors; users set them manually.
+- Deployed by the owner on Vercel; deploys follow pushes to the production branch.
+- OpenFIGI terms must be re-read before public use. No provider supplies business sectors; users set them manually.
 - Clicking buttons before the page finishes loading (first ~second on slow phones) does nothing.
 - Light theme only (deliberate "paper atlas" style).
 - No fund look-through, overlap detection, live prices, history or multi-currency.
