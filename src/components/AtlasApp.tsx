@@ -122,7 +122,7 @@ export function AtlasApp({ provider }: { provider: ProviderInfo }) {
         <HeroGlyph />
       </section>
 
-      <div className="workspace" id="atlas" ref={workspaceRef}>
+      <div className="workspace" id="atlas" ref={workspaceRef} data-ready={hydrated ? "true" : "false"}>
         {draft.isExample && (
           <div className="banner" role="status">
             <span>

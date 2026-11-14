@@ -10,6 +10,7 @@ export default defineConfig({
   use: { baseURL: `http://localhost:${PORT}`, trace: "off", acceptDownloads: true },
   webServer: {
     command: `npx next start -p ${PORT}`,
+    env: { MARKET_DATA_PROVIDER: "fixture" },
     url: `http://localhost:${PORT}`,
     reuseExistingServer: true,
     timeout: 120_000,

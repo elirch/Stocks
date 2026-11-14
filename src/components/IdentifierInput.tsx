@@ -24,6 +24,7 @@ export function IdentifierInput({ value, onChange, onPick, provider, rowLabel }:
   const [typed, setTyped] = useState(false);
   const listId = useId();
   const abort = useRef<AbortController | null>(null);
+  const focusedRef = useRef(false);
 
   useEffect(() => {
     if (!provider.enabled || !typed) return;
@@ -42,7 +43,7 @@ export function IdentifierInput({ value, onChange, onPick, provider, rowLabel }:
         if (!res.ok) throw new Error("search failed");
         const body = (await res.json()) as { results: SecurityMatch[] };
         setResults(body.results ?? []);
-        setOpen(true);
+        setOpen(focusedRef.current);
         setActive(-1);
         setStatus("idle");
       } catch (e) {
@@ -79,7 +80,14 @@ export function IdentifierInput({ value, onChange, onPick, provider, rowLabel }:
           setTyped(true);
           onChange(e.target.value);
         }}
-        onBlur={() => window.setTimeout(() => setOpen(false), 150)}
+        onFocus={() => {
+          focusedRef.current = true;
+        }}
+        onBlur={() => {
+          focusedRef.current = false;
+          abort.current?.abort();
+          window.setTimeout(() => setOpen(false), 150);
+        }}
         onKeyDown={(e) => {
           if (!showList) return;
           if (e.key === "ArrowDown") {

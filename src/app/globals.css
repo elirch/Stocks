@@ -257,7 +257,7 @@ textarea.input { min-height: 120px; font-family: ui-monospace, SFMono-Regular, M
 .cell-sub { display: block; font-size: 12px; color: var(--ink-3); }
 
 /* ---------- Dialog ---------- */
-.dialog { width: min(980px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); padding: 0; border: 0; border-radius: 18px; background: var(--card); color: var(--ink); box-shadow: 0 30px 80px rgba(0,0,0,.35); }
+.dialog { width: min(980px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); overflow: auto; padding: 0; border: 0; border-radius: 18px; background: var(--card); color: var(--ink); box-shadow: 0 30px 80px rgba(0,0,0,.35); }
 .dialog::backdrop { background: rgba(21,23,28,.55); }
 .dialog-body { padding: 20px; }
 .dialog-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }

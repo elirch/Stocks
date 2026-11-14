@@ -199,7 +199,11 @@ export function drawInfographic(ctx: Ctx, o: ExportOptions, scale: number) {
     if (r.w < 110 || r.h < 56) continue;
     ctx.font = `700 13px ${SANS}`;
     ctx.letterSpacing = "1.2px";
-    const label = fit(ctx, rg.group.style.label.toUpperCase(), r.w - 90) ?? "";
+    const label = fit(ctx, rg.group.style.label.toUpperCase(), r.w - 90);
+    if (!label) {
+      ctx.letterSpacing = "0px";
+      continue;
+    }
     const pct = formatPercent(rg.group.weight);
     const lw = ctx.measureText(label).width;
     ctx.letterSpacing = "0px";
@@ -277,29 +281,15 @@ export function drawInfographic(ctx: Ctx, o: ExportOptions, scale: number) {
   ctx.fillText(o.brand, M, footY - 8);
   ctx.font = `400 14px ${SANS}`;
   ctx.fillStyle = INK_2;
-  const note = `Created ${formatDate(o.date)}. Informational only, not investment advice. Area = share of the holdings entered, not total wealth.`;
-  const brandW = 170;
-  const lines = wrap(ctx, note, W - 2 * M - brandW);
-  lines.slice(0, 2).forEach((l, i) => {
-    const lw = ctx.measureText(l).width;
-    ctx.fillText(l, W - M - lw, footY - 24 + i * 19 - (lines.length > 1 ? 0 : -16));
+  const lines = [
+    `Created ${formatDate(o.date)} · Informational only, not investment advice.`,
+    "Area = share of the holdings entered, not total wealth.",
+  ];
+  lines.forEach((l, i) => {
+    const text = fit(ctx, l, W - 2 * M - 180) ?? "";
+    ctx.fillText(text, W - M - ctx.measureText(text).width, footY - 26 + i * 20);
   });
   ctx.restore();
-}
-
-function wrap(ctx: Ctx, text: string, maxW: number): string[] {
-  const words = text.split(" ");
-  const lines: string[] = [];
-  let cur = "";
-  for (const w of words) {
-    const next = cur ? `${cur} ${w}` : w;
-    if (ctx.measureText(next).width > maxW && cur) {
-      lines.push(cur);
-      cur = w;
-    } else cur = next;
-  }
-  if (cur) lines.push(cur);
-  return lines;
 }
 
 export async function ensureFontsLoaded(): Promise<void> {
