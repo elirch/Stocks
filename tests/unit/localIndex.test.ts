@@ -15,9 +15,10 @@ const entries = buildEntries({
 });
 
 describe("local SEC index search", () => {
-  it("ranks exact ticker, then ticker prefix, then name", () => {
+  it("puts an exact ticker first, then prefix matches by list order (largest first)", () => {
     expect(searchIndex(entries, "a").map((r) => r.identifier).slice(0, 3)).toEqual(["A", "AA", "AAPL"]);
     expect(searchIndex(entries, "apple").map((r) => r.identifier)).toEqual(["AAPL", "APLE"]);
+    expect(searchIndex(entries, "ap").map((r) => r.identifier)).toEqual(["AAPL", "APLE"]);
     expect(searchIndex(entries, "aapl")[0]!.identifier).toBe("AAPL");
   });
 

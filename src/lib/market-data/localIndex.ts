@@ -16,6 +16,8 @@ export interface Entry {
   name: string;
   exchange: string;
   nameLower: string;
+  /** Position in the source list (largest companies first). */
+  rank: number;
 }
 
 let loading: Promise<Entry[]> | null = null;
@@ -37,7 +39,7 @@ export function loadIndex(url = "/data/us-securities.json"): Promise<Entry[]> {
 }
 
 export function buildEntries(file: IndexFile): Entry[] {
-  return file.data.map(([ticker, name, exchange]) => ({ ticker, name, exchange, nameLower: name.toLowerCase() }));
+  return file.data.map(([ticker, name, exchange], rank) => ({ ticker, name, exchange, nameLower: name.toLowerCase(), rank }));
 }
 
 /** Only the name can tell us a security is an ETF; otherwise the type is left for the user. */
@@ -53,13 +55,13 @@ export function searchIndex(entries: Entry[], query: string, limit = 8): Securit
   const scored: { e: Entry; s: number }[] = [];
   for (const e of entries) {
     let s = -1;
-    if (e.ticker === upper) s = 0;
-    else if (e.ticker.startsWith(upper)) s = 1 + e.ticker.length / 100;
-    else if (e.nameLower.startsWith(lower)) s = 2;
-    else if (lower.length >= 2 && e.nameLower.includes(` ${lower}`)) s = 3;
+    if (e.ticker === upper) s = 0; // exact ticker always first
+    else if (e.ticker.startsWith(upper) || e.nameLower.startsWith(lower)) s = 1;
+    else if (lower.length >= 2 && e.nameLower.includes(` ${lower}`)) s = 2;
     if (s >= 0) scored.push({ e, s });
   }
-  scored.sort((a, b) => a.s - b.s || a.e.ticker.length - b.e.ticker.length || a.e.ticker.localeCompare(b.e.ticker));
+  // Within a tier, larger companies (earlier in the SEC list) come first.
+  scored.sort((a, b) => a.s - b.s || a.e.rank - b.e.rank);
   return scored.slice(0, limit).map(({ e }) => ({
     identifier: e.ticker,
     name: e.name,

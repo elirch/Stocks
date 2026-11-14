@@ -21,7 +21,7 @@ _Last updated: 2026-11-14_
 - Live at the owner's Vercel deployment (deployed by the owner from this branch).
 - "Download editable copy": the PNG carries the portfolio in an iTXt chunk; uploading it restores the holdings for editing.
 - One "Upload" path for Excel (.xlsx), CSV/TSV, saved .json and editable PNGs. Header detection (English + Hebrew broker headings), total rows skipped, cost/price columns never used as value.
-- SEC type-ahead implemented (browser-side search over a static list); waiting for the data file.
+- SEC type-ahead live: `public/data/us-securities.json` (7,661 U.S.-listed companies, largest first; generated 2026-11-14). Popular ETFs (VTI, VOO, QQQ, BND) are NOT in the SEC list — type them by hand for now.
 - A row without a value is shown as unfinished (grey), not as an error.
 - OpenFIGI verified live: works, but results are too noisy for type-ahead (e.g. municipal bonds for "apple"). Kept as an option, not enabled.
 
@@ -44,4 +44,4 @@ _Last updated: 2026-11-14_
 
 ## Exact next step
 
-Owner runs `scripts/build-securities.mjs` once with their SEC_USER_AGENT (the type-ahead code is done and tested; only the data file is missing), then commit `public/data/us-securities.json`. Then: the "story" infographic (multi-slide export) and snapshots over time.
+Decide with the founder (after the advisor review) between: ETF coverage for type-ahead (needs a source with fund names), the multi-slide "portfolio story" export, or snapshots over time. Refresh the SEC list monthly: `NODE_USE_ENV_PROXY=1` is only needed inside Claude's cloud sandbox.

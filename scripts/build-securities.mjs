@@ -39,11 +39,13 @@ if (iName < 0 || iTicker < 0) {
 const KEEP_UPPER = new Set(["ETF", "ADR", "REIT", "LLC", "LP", "PLC", "NV", "SA", "AG", "SE", "II", "III", "IV", "USA", "US", "UK"]);
 function titleCase(name) {
   return name
+    .replace(/\s*\/[A-Za-z]{2,3}\/?\s*$/, "") // SEC state-of-incorporation suffixes such as "/DE/"
     .split(/\s+/)
     .map((w) => {
       const bare = w.replace(/[^A-Za-z]/g, "");
-      if (KEEP_UPPER.has(bare.toUpperCase()) || /\d/.test(w) || bare.length <= 1) return w;
-      return w.charAt(0) + w.slice(1).toLowerCase();
+      // Keep acronyms (no vowels: SPDR, NV), tickers-in-names (S&P, A.O.) and numbers as written.
+      if (KEEP_UPPER.has(bare.toUpperCase()) || /\d|&|\.\w/.test(w) || bare.length <= 1 || !/[AEIOUY]/i.test(bare)) return w;
+      return (w.charAt(0) + w.slice(1).toLowerCase()).replace(/-([a-z])/g, (_, c) => `-${c.toUpperCase()}`);
     })
     .join(" ")
     .replace(/\bInc\b\.?/g, "Inc.")
@@ -71,7 +73,8 @@ for (const r of body.data) {
   seen.add(key);
   rows.push([ticker, titleCase(name), exchange]);
 }
-rows.sort((a, b) => a[0].localeCompare(b[0]));
+// Keep the SEC's order: it lists the largest companies first, which the
+// type-ahead uses as its relevance signal.
 
 const out = {
   source: "U.S. Securities and Exchange Commission — company_tickers_exchange.json",
