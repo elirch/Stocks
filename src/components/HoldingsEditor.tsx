@@ -17,11 +17,12 @@ interface Props {
   draft: PortfolioDraft;
   dispatch: PortfolioDispatch;
   provider: ProviderInfo;
+  onUpload: () => void;
 }
 
 const TYPE_ORDER: InstrumentType[] = ["stock", "etf", "mutual_fund", "bond", "cash", "crypto", "other", "unknown"];
 
-export function HoldingsEditor({ draft, dispatch, provider }: Props) {
+export function HoldingsEditor({ draft, dispatch, provider, onUpload }: Props) {
   const [pasteOpen, setPasteOpen] = useState(false);
   const [currencyNote, setCurrencyNote] = useState(false);
   const listRef = useRef<HTMLOListElement>(null);
@@ -64,8 +65,7 @@ export function HoldingsEditor({ draft, dispatch, provider }: Props) {
         </div>
       </div>
       <p className="hint">
-        Enter every value in <strong>{draft.currency}</strong>. <strong>Current holding value</strong> means what the whole
-        position is worth today — not what you paid for it. Values are never converted between currencies.
+        Values in <strong>{draft.currency}</strong> — what each holding is worth today, not what you paid.
       </p>
       {currencyNote && (
         <p className="notice" role="status">
@@ -124,8 +124,11 @@ export function HoldingsEditor({ draft, dispatch, provider }: Props) {
         <button type="button" className="btn" onClick={addRow} disabled={atLimit}>
           + Add holding
         </button>
+        <button type="button" className="btn ghost" onClick={onUpload} title="Excel, CSV, or an editable Atlas image">
+          Upload Excel / CSV
+        </button>
         <button type="button" className="btn ghost" onClick={() => setPasteOpen((v) => !v)} aria-expanded={pasteOpen}>
-          Paste a list
+          Paste
         </button>
         <span className="row-count">
           {draft.holdings.length} {draft.holdings.length === 1 ? "row" : "rows"}

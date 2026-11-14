@@ -7,6 +7,7 @@ async function showTab(page: Page, tab: "Holdings" | "Atlas") {
 }
 
 async function open(page: Page) {
+  page.on("dialog", (d) => void d.accept());
   await page.goto("/");
   await page.locator('[data-ready="true"]').waitFor();
 }
@@ -68,7 +69,7 @@ test("enter holdings, explore, save and restore, export", async ({ page }, info)
   // Pointer/touch selection.
   const svg = map.locator("svg");
   const box = (await svg.boundingBox())!;
-  await page.mouse.click(box.x + 20, box.y + 20);
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
   await expect(page.locator(".detail")).toContainText("Share of entered holdings");
 
   // Accessible table alternative.
@@ -110,6 +111,26 @@ test("enter holdings, explore, save and restore, export", async ({ page }, info)
   const pngPath = info.outputPath("atlas.png");
   await png.saveAs(pngPath);
   expect(pngSize(pngPath)).toEqual({ w: 2160, h: 2700 });
+
+  // Editable copy: download, then upload it to restore the holdings.
+  const [editable] = await Promise.all([
+    page.waitForEvent("download"),
+    dialog.getByRole("button", { name: "Download editable copy" }).click(),
+  ]);
+  expect(editable.suggestedFilename()).toMatch(/-editable\.png$/);
+  const editablePath = info.outputPath("editable.png");
+  await editable.saveAs(editablePath);
+  await dialog.getByRole("button", { name: "Close" }).click();
+  await page.getByTestId("file-input").setInputFiles({
+    name: "atlas.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from("Symbol,Market Value\nZZZ,100\n"),
+  });
+  await expect(page.getByText(/Imported 1 holdings/)).toBeVisible();
+  await page.getByTestId("file-input").setInputFiles(editablePath);
+  await expect(page.getByText(/Opened 3 holdings in USD/)).toBeVisible();
+  await showTab(page, "Holdings");
+  await expect(page.getByLabel("Current value for Mystery Co")).toHaveValue("500");
 });
 
 test("example portfolio is labelled and not saved", async ({ page }) => {

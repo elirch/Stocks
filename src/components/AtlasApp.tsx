@@ -8,7 +8,8 @@ import { groupPositions, summarize } from "@/lib/portfolio/calc";
 import { makeId } from "@/lib/portfolio/ids";
 import { computeInsights } from "@/lib/portfolio/insights";
 import type { GroupKey, GroupMode } from "@/lib/portfolio/taxonomy";
-import { parsePortfolioFile, toFile } from "@/lib/persistence/file";
+import { toFile } from "@/lib/persistence/file";
+import { importAnyFile } from "@/lib/persistence/importFile";
 import { AtlasMap, AtlasPatterns } from "./AtlasMap";
 import { ExportDialog } from "./ExportDialog";
 import { HoldingsEditor } from "./HoldingsEditor";
@@ -62,19 +63,38 @@ export function AtlasApp({ provider }: { provider: ProviderInfo }) {
   }
 
   async function openFile(file: File) {
-    if (file.size > 1_000_000) {
-      setFileMsg({ kind: "error", lines: ["That file is larger than 1 MB, which is too big for a portfolio file."] });
-      return;
-    }
-    const res = parsePortfolioFile(await file.text(), makeId);
-    if (!res.ok) {
+    const room = 1000;
+    const res = importAnyFile(file.name, new Uint8Array(await file.arrayBuffer()), makeId, room);
+    if (res.kind === "error") {
       setFileMsg({ kind: "error", lines: ["Couldn't open that file.", ...res.errors] });
       return;
     }
-    dispatch({ type: "replace", draft: res.draft });
+    const existing = draft.isExample ? 0 : summary.positions.length;
+    if (existing > 0 && !window.confirm(`Replace your ${existing} current holdings with the ones in “${file.name}”?`)) return;
+    if (res.kind === "portfolio") {
+      dispatch({ type: "replace", draft: res.draft });
+      setFileMsg({
+        kind: "ok",
+        lines: [`Opened ${res.draft.holdings.length} holdings in ${res.draft.currency}.`, ...res.warnings.slice(0, 6)],
+      });
+    } else {
+      dispatch({
+        type: "replace",
+        draft: { currency: draft.currency, title: draft.isExample ? "My portfolio" : draft.title, holdings: res.holdings, dismissedDuplicates: [] },
+      });
+      setFileMsg({
+        kind: "ok",
+        lines: [
+          `Imported ${res.holdings.length} holdings. Values are read as ${draft.currency} — change the currency if needed.`,
+          ...(res.columns ? [`Columns used: ${[res.columns.identifier, res.columns.name, res.columns.value].filter(Boolean).join(", ")}.`] : []),
+          ...res.skipped.slice(0, 6).map((x) => `Row ${x.row} skipped: ${x.reason}`),
+          ...(res.skipped.length > 6 ? [`…and ${res.skipped.length - 6} more rows skipped.`] : []),
+        ],
+      });
+    }
     setSelectedId(null);
     setZoomKey(null);
-    setFileMsg({ kind: "ok", lines: [`Opened ${res.draft.holdings.length} holdings in ${res.draft.currency}.`, ...res.warnings.slice(0, 6)] });
+    setMobileTab("holdings");
   }
 
   return (
@@ -163,7 +183,12 @@ export function AtlasApp({ provider }: { provider: ProviderInfo }) {
 
         <div className="workspace-grid" data-tab={mobileTab}>
           <div className="col-editor">
-            <HoldingsEditor draft={draft} dispatch={dispatch} provider={provider} />
+            <HoldingsEditor
+              draft={draft}
+              dispatch={dispatch}
+              provider={provider}
+              onUpload={() => fileInput.current?.click()}
+            />
             {summary.excluded.length > 0 && (
               <p className="notice warn" role="status">
                 {summary.excluded.length} {summary.excluded.length === 1 ? "row has" : "rows have"} an invalid value and{" "}
@@ -186,7 +211,7 @@ export function AtlasApp({ provider }: { provider: ProviderInfo }) {
                   Save file
                 </button>
                 <button type="button" className="btn small" onClick={() => fileInput.current?.click()}>
-                  Open file
+                  Upload
                 </button>
                 <button
                   type="button"
@@ -205,7 +230,7 @@ export function AtlasApp({ provider }: { provider: ProviderInfo }) {
                 <input
                   ref={fileInput}
                   type="file"
-                  accept="application/json,.json"
+                  accept=".xlsx,.csv,.tsv,.txt,.json,.png,application/json,image/png,text/csv"
                   hidden
                   data-testid="file-input"
                   onChange={(e) => {
@@ -336,6 +361,7 @@ export function AtlasApp({ provider }: { provider: ProviderInfo }) {
         base={exportBase}
         title={draft.title}
         onTitle={(t) => dispatch({ type: "setTitle", title: t })}
+        portfolioJson={() => JSON.stringify(toFile(draft))}
       />
     </>
   );

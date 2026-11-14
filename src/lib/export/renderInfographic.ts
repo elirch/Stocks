@@ -319,11 +319,11 @@ export function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   );
 }
 
-export function exportFileName(title: string, date: Date): string {
+export function exportFileName(title: string, date: Date, editable = false): string {
   const slug = title
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "")
     .slice(0, 40) || "portfolio";
-  return `${slug}-atlas-${date.toISOString().slice(0, 10)}.png`;
+  return `${slug}-atlas-${date.toISOString().slice(0, 10)}${editable ? "-editable" : ""}.png`;
 }

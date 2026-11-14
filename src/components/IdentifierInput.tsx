@@ -67,7 +67,7 @@ export function IdentifierInput({ value, onChange, onPick, provider, rowLabel }:
         className="input"
         value={value}
         maxLength={120}
-        placeholder={provider.enabled ? "Ticker (search)" : "Ticker / ID"}
+        placeholder={provider.enabled ? "Ticker" : "Ticker"}
         aria-label={`Identifier for ${rowLabel}`}
         role={provider.enabled ? "combobox" : undefined}
         aria-expanded={provider.enabled ? showList : undefined}

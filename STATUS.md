@@ -16,6 +16,13 @@ _Last updated: 2026-11-14_
 - Market-data provider interface; demo fixture provider; OpenFIGI adapter (mock-tested only); rate-limited, validated `/api/securities/search`.
 - Tests: 83 unit tests (Vitest) + e2e journey on desktop and Pixel 7 (Playwright). Typecheck and production build pass.
 
+## Added 2026-11-14 (session 2)
+
+- Live at the owner's Vercel deployment (deployed by the owner from this branch).
+- "Download editable copy": the PNG carries the portfolio in an iTXt chunk; uploading it restores the holdings for editing.
+- One "Upload" path for Excel (.xlsx), CSV/TSV, saved .json and editable PNGs. Header detection (English + Hebrew broker headings), total rows skipped, cost/price columns never used as value.
+- OpenFIGI verified live: works, but results are too noisy for type-ahead (e.g. municipal bonds for "apple"). Kept as an option, not enabled.
+
 ## Not done / limitations
 
 - **Not deployed** — nothing is live yet.
@@ -35,4 +42,4 @@ _Last updated: 2026-11-14_
 
 ## Exact next step
 
-Deploy the `claude/portfolio-atlas-build-2ivmag` branch to Vercel (see README → Deploy) as a private preview, try it on a real phone, then decide whether to make it public.
+Type-ahead from the SEC public ticker list (static file, no API at runtime). Blocked on: SEC requires a contact e-mail in the download request's User-Agent — waiting for the owner to choose which address to use. Then: the "story" infographic (multi-slide export) and snapshots over time.

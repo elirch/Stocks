@@ -3,11 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { canvasToBlob, exportFileName, renderInfographicCanvas, type ExportOptions } from "@/lib/export/renderInfographic";
 import { BRAND } from "@/lib/brand";
+import { embedText } from "@/lib/export/pngMeta";
 
 type Base = Omit<ExportOptions, "showAmounts" | "date" | "brand" | "product" | "title">;
 
-export function ExportDialog({ open, onClose, base, title, onTitle }: {
+export function ExportDialog({ open, onClose, base, title, onTitle, portfolioJson }: {
   open: boolean;
+  /** Serialized portfolio file, embedded only in the "editable copy". */
+  portfolioJson: () => string;
   onClose: () => void;
   base: Base;
   title: string;
@@ -59,16 +62,20 @@ export function ExportDialog({ open, onClose, base, title, onTitle }: {
     return { ...base, title, showAmounts, date: new Date(), brand: BRAND.byline, product: BRAND.product };
   }
 
-  async function download() {
+  async function download(editable: boolean) {
     setBusy(true);
     try {
       const o = options();
       const canvas = await renderInfographicCanvas(o, 2);
-      const blob = await canvasToBlob(canvas);
+      let blob = await canvasToBlob(canvas);
+      if (editable) {
+        const bytes = embedText(new Uint8Array(await blob.arrayBuffer()), portfolioJson());
+        blob = new Blob([bytes as BlobPart], { type: "image/png" });
+      }
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = exportFileName(o.title, o.date);
+      a.download = exportFileName(o.title, o.date, editable);
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -125,11 +132,20 @@ export function ExportDialog({ open, onClose, base, title, onTitle }: {
                 This image will reveal how much you hold.
               </p>
             )}
-            <p className="fine">1080 × 1350 layout at 2× resolution (2160 × 2700 PNG). Created on your device — nothing is uploaded.</p>
             {error && <p className="row-error">{error}</p>}
-            <button type="button" className="btn primary wide" onClick={download} disabled={busy}>
+            <button type="button" className="btn primary wide" onClick={() => download(false)} disabled={busy}>
               {busy ? "Preparing…" : "Download PNG"}
             </button>
+            <div className="editable-box">
+              <button type="button" className="btn wide" onClick={() => download(true)} disabled={busy}>
+                Download editable copy
+              </button>
+              <p className="fine">
+                Same image, with your holdings saved inside. Upload it here later to keep editing. Keep it private — it contains
+                your values.
+              </p>
+            </div>
+            <p className="fine">2160 × 2700 PNG, made on your device.</p>
           </div>
         </div>
       </div>
